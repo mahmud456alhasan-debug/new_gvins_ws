@@ -1,0 +1,21 @@
+<launch>
+  <!-- Optional all-in-one replay with use_sim_time. Paths with spaces need env vars (plain rosbag args are split).
+       Alternative: same as before: Terminal A) roslaunch gvins my_collected_dataset_adaptive_rtk.launch
+       Terminal B) rviz  Terminal C) rosbag play "/path/with spaces/bag.bag" (quote path; no use_sim_time unless you set it). -->
+  <arg name="bag" default="$(env HOME)/My Collected DATASET/xjtu_dorm_day.bag" />
+  <arg name="rate" default="1.0" />
+  <arg name="start" default="0" />
+  <arg name="gnss_local_time_diff" default="18.0" />
+
+  <param name="/use_sim_time" value="true" />
+
+  <include file="$(find gvins)/launch/my_collected_dataset_adaptive_rtk.launch">
+    <arg name="gnss_local_time_diff" value="$(arg gnss_local_time_diff)" />
+  </include>
+
+  <node pkg="gvins" type="replay_bag.py" name="xjtu_bag_player" output="screen">
+    <env name="REPLAY_BAG" value="$(arg bag)" />
+    <env name="REPLAY_RATE" value="$(arg rate)" />
+    <env name="REPLAY_START" value="$(arg start)" />
+  </node>
+</launch>

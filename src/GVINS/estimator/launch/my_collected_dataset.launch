@@ -1,0 +1,23 @@
+<launch>
+    <!-- Tight GNSS in estimator when using my_collected_dataset_config.yaml (gnss_enable: 1).
+         For loose-only fusion (VINS-Fusion style), use my_collected_dataset_loose_coupling.launch instead. -->
+    <arg name="config_path" default = "$(find gvins)/../config/visensor_f9p/my_collected_dataset_config.yaml" />
+    <arg name="gvins_path" default = "$(find gvins)/../" />
+    
+    <node name="gvins_feature_tracker" pkg="gvins_feature_tracker" type="gvins_feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)" />
+        <param name="gvins_folder" type="string" value="$(arg gvins_path)" />
+    </node>
+
+    <arg name="gdb" default="false" />
+    <node name="gvins" pkg="gvins" type="gvins" output="screen" launch-prefix="gdb --batch --ex run --ex bt --ex 'info registers' --ex 'info locals' --ex quit" if="$(arg gdb)">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="gvins_folder" type="string" value="$(arg gvins_path)" />
+    </node>
+    <node name="gvins" pkg="gvins" type="gvins" output="screen" unless="$(arg gdb)">
+       <param name="config_file" type="string" value="$(arg config_path)" />
+       <param name="gvins_folder" type="string" value="$(arg gvins_path)" />
+    </node>
+
+</launch>
+

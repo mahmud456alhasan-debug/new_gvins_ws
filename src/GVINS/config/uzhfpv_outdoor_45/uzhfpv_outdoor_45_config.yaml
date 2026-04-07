@@ -1,0 +1,98 @@
+%YAML:1.0
+
+
+imu_topic: "/snappy_imu"
+image_topic: "/snappy_cam/stereo_l"
+output_dir: "~/new_gvins_ws/output/"
+
+
+model_type: KANNALA_BRANDT
+camera_name: camera
+image_width: 640
+image_height: 480
+projection_parameters:
+   k2: -0.017811595366268803
+   k3: 0.04897078939103475
+   k4: -0.041363300782847834
+   k5: 0.011440891936886532
+   mu: 275.3385453506587
+   mv: 275.0852058534152
+   u0: 315.7697752181792
+   v0: 233.72625444124952
+
+
+gnss_enable: 0 
+gnss_meas_topic: "/ublox_driver/range_meas"           # GNSS raw measurement topic
+gnss_ephem_topic: "/ublox_driver/ephem"               # GPS, Galileo, BeiDou ephemeris
+gnss_glo_ephem_topic: "/ublox_driver/glo_ephem"       # GLONASS ephemeris
+gnss_iono_params_topic: "/ublox_driver/iono_params"   # GNSS broadcast ionospheric parameters 电离层参数topic
+gnss_tp_info_topic: "/ublox_driver/time_pulse_info"   # PPS time info 秒脉冲时间输入topic
+gnss_elevation_thres: 30            # satellite elevation threshold (degree)  卫星高度角阈值 
+gnss_psr_std_thres: 2.0             # pseudo-range std threshold 伪距标准差阈值
+gnss_dopp_std_thres: 2.0            # doppler std threshold 多普勒标准差阈值
+gnss_track_num_thres: 20            # number of satellite tracking epochs before entering estimator 进入估计器前的卫星跟踪历元数
+gnss_ddt_sigma: 0.1
+
+
+gnss_local_online_sync: 0                     # if perform online synchronization betwen GNSS and local time 如果在线同步GNSS与本地时间
+local_trigger_info_topic: "/external_trigger" # external trigger info of the local sensor, if `gnss_local_online_sync` is 1 当' gnss_local_online_sync ' = 1时，本地传感器外部触发信息
+gnss_local_time_diff: 0.0                    # difference between GNSS and local time (s), if `gnss_local_online_sync` is 0 如果' gnss_local_online_sync '为0，则GNSS与本地时间的时间差(秒)
+
+# 缺省电离层参数
+gnss_iono_default_parameters: !!opencv-matrix 
+   rows: 1
+   cols: 8
+   dt: d
+   data: [0.1118E-07,  0.2235E-07, -0.4172E-06,  0.6557E-06,
+          0.1249E+06, -0.4424E+06,  0.1507E+07, -0.2621E+06]
+
+# Extrinsic parameter between IMU and Camera. 是否进行外参的在线标定
+estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
+                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
+#If you choose 0 or 1, you should write down the following matrix.
+#Rotation from camera frame to imu frame, imu^R_cam
+#T_cam_imu from OpenVINS uzhfpv_outdoor_45 kalibr_imucam_chain.yaml
+#imu^R_cam = R_cam_imu^T
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ -2.4041523213909927e-02, -7.1845273208826210e-01,
+       6.9516018076157440e-01, -9.9966407906249550e-01,
+       1.0542697330412382e-02, -2.3676582632001453e-02,
+       9.6816420965509240e-03, -6.9549588301291130e-01,
+       -7.1846485127555340e-01 ]
+#Translation from camera frame to imu frame, imu^T_cam
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [ 2.4969170000000000e-02, 1.9509410000000000e-02,
+       -1.3546630000000000e-02 ]
+
+#feature traker paprameters
+max_cnt: 150            # max feature number in feature tracking 追踪最大提取的特征点数量
+min_dist: 30            # min distance between two features  两个特征点的距离
+freq: 0                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 设置追踪输出的频率
+F_threshold: 1.0        # ransac threshold (pixel) ransac阈值
+show_track: 1           # publish tracking image as topic 展示追踪图像
+equalize: 1             # if image is too dark or light, trun on equalize to find enough features 如果图像太亮或者太暗均衡画寻找足够的特征点
+fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+
+#optimization parameters
+max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
+max_num_iterations: 8   # max solver itrations, to guarantee real time
+keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+#imu parameters       The more accurate parameters you provide, the better performance
+acc_n: 0.2          # accelerometer measurement noise standard deviation. #0.2
+gyr_n: 0.02         # gyroscope measurement noise standard deviation.     #0.05
+acc_w: 0.0002         # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 2.0e-5       # gyroscope bias random work noise standard deviation.     #4.0e-5
+g_norm: 9.8065     # gravity magnitude
+
+#unsynchronization parameters
+estimate_td: 0       # online estimate time offset between camera and imu 在线估计相机和imu之间的时间偏移
+td: -0.008637511810764048  # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock) 时间偏移的初始值。单位:s.读图像时钟+ td =实图像时钟(IMU时钟) (OpenVINS: timeshift_cam_imu: -0.008637511810764048)
+

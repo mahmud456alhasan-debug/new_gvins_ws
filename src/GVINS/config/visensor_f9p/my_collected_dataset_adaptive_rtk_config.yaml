@@ -1,0 +1,106 @@
+%YAML:1.0
+
+# Adaptive GNSS: gnss_adaptive_carr_soln=1 uses UBX carr_soln (GnssPVTSolnMsg).
+# carr_soln==2 (RTK carrier-phase fix) => loose NavSatFix fusion in gvins_global_fusion; raw GNSS off in estimator.
+# carr_soln<2 (no CP or float) => tight raw GNSS in GVINS; gvins_global_fusion does not apply NavSatFix.
+
+#common parameters
+imu_topic: "/camera/imu"
+image_topic: "/camera/color/image_raw"
+output_dir: "~/new_gvins_ws/output/" 
+
+#camera calibration (from Kalibr camera intrinsic calibration)
+model_type: PINHOLE
+camera_name: camera
+image_width: 640
+image_height: 480
+
+distortion_parameters:
+   k1: 0.14743915941372665
+   k2: -0.2604762669982693
+   p1: 0.0015220483379525952
+   p2: -0.006706403411448493
+projection_parameters:
+   fx: 613.0996669374994
+   fy: 613.417482693403
+   cx: 310.6871792035546
+   cy: 244.2454057229741
+
+# GNSS相关参数
+gnss_enable: 1 # ignored when gnss_adaptive_carr_soln=1 (runtime starts VIO-only, then toggles)
+gnss_adaptive_carr_soln: 1
+gnss_pvt_topic: "/ublox_driver/receiver_pvt"
+gnss_meas_topic: "/ublox_driver/range_meas"           # GNSS raw measurement topic
+gnss_ephem_topic: "/ublox_driver/ephem"               # GPS, Galileo, BeiDou ephemeris
+gnss_glo_ephem_topic: "/ublox_driver/glo_ephem"       # GLONASS ephemeris
+gnss_iono_params_topic: "/ublox_driver/iono_params"   # GNSS broadcast ionospheric parameters 电离层参数topic
+gnss_tp_info_topic: "/ublox_driver/time_pulse_info"   # PPS time info 秒脉冲时间输入topic
+gnss_elevation_thres: 30            # satellite elevation threshold (degree)  卫星高度角阈值 
+gnss_psr_std_thres: 2.0             # pseudo-range std threshold 伪距标准差阈值
+gnss_dopp_std_thres: 2.0            # doppler std threshold 多普勒标准差阈值
+gnss_track_num_thres: 20            # number of satellite tracking epochs before entering estimator 进入估计器前的卫星跟踪历元数
+gnss_ddt_sigma: 0.1
+
+csv_enable: 0          # 使能读取CSV文件
+csv_filename: "/home/wxtcon/output/TIM_dataset/iHarbour_campus/GVINS/VINS_ai_read.csv"
+
+gnss_local_online_sync: 0                     # if perform online synchronization betwen GNSS and local time 如果在线同步GNSS与本地时间
+local_trigger_info_topic: "/external_trigger" # external trigger info of the local sensor, if `gnss_local_online_sync` is 1 当' gnss_local_online_sync ' = 1时，本地传感器外部触发信息
+gnss_local_time_diff: 18.0                   # difference between GNSS and local time (s), if `gnss_local_online_sync` is 0 如果' gnss_local_online_sync '为0，则GNSS与本地时间的时间差(秒)
+
+# 缺省电离层参数
+gnss_iono_default_parameters: !!opencv-matrix 
+   rows: 1
+   cols: 8
+   dt: d
+   data: [0.1118E-07,  0.2235E-07, -0.4172E-06,  0.6557E-06,
+          0.1249E+06, -0.4424E+06,  0.1507E+07, -0.2621E+06]
+
+# Extrinsic parameter between IMU and Camera (from Kalibr camera-IMU calibration)
+estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
+                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
+#If you choose 0 or 1, you should write down the following matrix.
+#Rotation from camera frame to imu frame, imu^R_cam
+# Note: Kalibr gives T_cam_imu (IMU to camera), GVINS needs imu^R_cam (camera to IMU) = transpose of rotation part
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [0.9988722190940368, 0.007784655660268735, -0.046836834419142166,
+          -0.007474476703606469, 0.9999489852977864, 0.006794041502306663,
+          0.04688733432561867, -0.006436298484289486, 0.9988794481526083]
+#Translation from camera frame to imu frame, imu^T_cam
+# Note: Kalibr gives t_cam_imu, GVINS needs imu^T_cam = -R_cam_imu^T * t_cam_imu
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [-0.03698544025344245, -0.05645616128717146, 0.03333795673276123]
+
+#feature traker paprameters
+max_cnt: 150            # max feature number in feature tracking 追踪最大提取的特征点数量
+min_dist: 30            # min distance between two features  两个特征点的距离
+freq: 20                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 设置追踪输出的频率
+F_threshold: 1.0        # ransac threshold (pixel) ransac阈值
+show_track: 1           # publish tracking image as topic 展示追踪图像
+equalize: 1             # if image is too dark or light, trun on equalize to find enough features 如果图像太亮或者太暗均衡画寻找足够的特征点
+fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+
+#optimization parameters
+max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
+max_num_iterations: 8   # max solver itrations, to guarantee real time
+keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+#imu parameters (from 5-hour Allan variance calibration using imu_utils)
+acc_n: 1.7350921485387225e-02          # accelerometer measurement noise standard deviation (from 5h calibration)
+gyr_n: 1.4525632980313616e-03         # gyroscope measurement noise standard deviation (from 5h calibration)
+acc_w: 2.8319777865912281e-04         # accelerometer bias random work noise standard deviation (from 5h calibration)
+gyr_w: 9.1375741919712940e-06       # gyroscope bias random work noise standard deviation (from 5h calibration)
+
+# g_norm: 9.787561     # gravity magnitude Hongkong
+g_norm: 9.79136      # Xi'an gravity magnitude
+
+#unsynchronization parameters
+estimate_td: 1                      # online estimate time offset between camera and imu 在线估计相机和imu之间的时间偏移
+td: 0.01031495550941674             # initial value of time offset from Kalibr calibration (10.3 ms). unit: s. readed image clock + td = real image clock (IMU clock)

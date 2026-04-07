@@ -1,0 +1,86 @@
+%YAML:1.0
+# M3DGR dataset config (with GNSS) - same as gvins_m3dgr_ws m3dgr.yaml
+
+#common parameters
+imu_topic: "/camera/imu"
+image_topic: "/camera/color/image_raw"
+output_dir: "~/new_gvins_ws/output/m3dgr/"
+
+#camera calibration (M3DGR - Realsense D435i)
+model_type: PINHOLE
+camera_name: camera
+image_width: 640
+image_height: 480
+distortion_parameters:
+   k1: 0.0
+   k2: 0.0
+   p1: 0.0
+   p2: 0.0
+projection_parameters:
+   fx: 607.79772949218
+   fy: 607.83526613281
+   cx: 328.79772949218
+   cy: 245.53321838378
+
+gnss_enable: 1
+gnss_meas_topic: "/ublox_driver/range_meas"
+gnss_ephem_topic: "/ublox_driver/ephem"
+gnss_glo_ephem_topic: "/ublox_driver/glo_ephem"
+gnss_iono_params_topic: "/ublox_driver/iono_params"
+gnss_tp_info_topic: "/ublox_driver/time_pulse_info"
+gnss_elevation_thres: 30
+gnss_psr_std_thres: 2.0
+gnss_dopp_std_thres: 2.0
+gnss_track_num_thres: 20
+gnss_ddt_sigma: 0.1
+
+gnss_local_online_sync: 0
+local_trigger_info_topic: "/external_trigger"
+gnss_local_time_diff: 18.0
+
+gnss_iono_default_parameters: !!opencv-matrix
+   rows: 1
+   cols: 8
+   dt: d
+   data: [0.1118E-07,  0.2235E-07, -0.4172E-06,  0.6557E-06,
+          0.1249E+06, -0.4424E+06,  0.1507E+07, -0.2621E+06]
+
+# Extrinsic parameter between IMU and Camera (M3DGR calibration)
+estimate_extrinsic: 0
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [0.99957087, 0.00215313, 0.02921355,
+          -0.00192891, 0.99996848, -0.00770122,
+          -0.02922921, 0.00764156, 0.99954353]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [0.03668114, -0.00477653, 0.0316039]
+
+#feature tracker parameters
+max_cnt: 150
+min_dist: 30
+freq: 10
+F_threshold: 1.0
+show_track: 1
+equalize: 1
+fisheye: 0
+
+#optimization parameters
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+#imu parameters (M3DGR - Realsense D435i)
+acc_n: 1.2374091609523514e-02
+gyr_n: 3.0032654435730201e-03
+acc_w: 1.9218003442176448e-04
+gyr_w: 5.4692100664858005e-05
+g_norm: 9.7944
+
+#unsynchronization parameters
+estimate_td: 0
+td: 0.0

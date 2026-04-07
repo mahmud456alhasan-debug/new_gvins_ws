@@ -1,0 +1,97 @@
+%YAML:1.0
+
+# Same as my_collected_dataset_config.yaml but gnss_enable: 0 (VIO-only in GVINS).
+# Use with my_collected_dataset_loose_coupling.launch + gvins_global_fusion:
+#   tight coupling (raw GNSS in factor graph) OFF — same idea as VINS-Fusion vins_node
+#   (no GNSS inside estimator) + global_fusion consuming NavSatFix separately.
+
+#common parameters
+imu_topic: "/camera/imu"
+image_topic: "/camera/color/image_raw"
+output_dir: "~/new_gvins_ws/output/" 
+
+#camera calibration (from Kalibr camera intrinsic calibration)
+model_type: PINHOLE
+camera_name: camera
+image_width: 640
+image_height: 480
+
+distortion_parameters:
+   k1: 0.14743915941372665
+   k2: -0.2604762669982693
+   p1: 0.0015220483379525952
+   p2: -0.006706403411448493
+projection_parameters:
+   fx: 613.0996669374994
+   fy: 613.417482693403
+   cx: 310.6871792035546
+   cy: 244.2454057229741
+
+# GNSS相关参数 — disabled for loose-coupling experiments (use gvins_global_fusion for NavSatFix)
+gnss_enable: 0 # 0 = no raw GNSS in estimator (tight coupling off); NavSatFix fused in gvins_global_fusion node
+gnss_meas_topic: "/ublox_driver/range_meas"
+gnss_ephem_topic: "/ublox_driver/ephem"
+gnss_glo_ephem_topic: "/ublox_driver/glo_ephem"
+gnss_iono_params_topic: "/ublox_driver/iono_params"
+gnss_tp_info_topic: "/ublox_driver/time_pulse_info"
+gnss_elevation_thres: 30
+gnss_psr_std_thres: 2.0
+gnss_dopp_std_thres: 2.0
+gnss_track_num_thres: 20
+gnss_ddt_sigma: 0.1
+
+csv_enable: 0
+csv_filename: "/home/wxtcon/output/TIM_dataset/iHarbour_campus/GVINS/VINS_ai_read.csv"
+
+gnss_local_online_sync: 0
+local_trigger_info_topic: "/external_trigger"
+gnss_local_time_diff: 18.0
+
+# 缺省电离层参数
+gnss_iono_default_parameters: !!opencv-matrix 
+   rows: 1
+   cols: 8
+   dt: d
+   data: [0.1118E-07,  0.2235E-07, -0.4172E-06,  0.6557E-06,
+          0.1249E+06, -0.4424E+06,  0.1507E+07, -0.2621E+06]
+
+# Extrinsic parameter between IMU and Camera (from Kalibr camera-IMU calibration)
+estimate_extrinsic: 0
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [0.9988722190940368, 0.007784655660268735, -0.046836834419142166,
+          -0.007474476703606469, 0.9999489852977864, 0.006794041502306663,
+          0.04688733432561867, -0.006436298484289486, 0.9988794481526083]
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [-0.03698544025344245, -0.05645616128717146, 0.03333795673276123]
+
+#feature traker paprameters
+max_cnt: 150
+min_dist: 30
+freq: 20
+F_threshold: 1.0
+show_track: 1
+equalize: 1
+fisheye: 0
+
+#optimization parameters
+max_solver_time: 0.04
+max_num_iterations: 8
+keyframe_parallax: 10.0
+
+#imu parameters (from 5-hour Allan variance calibration using imu_utils)
+acc_n: 1.7350921485387225e-02
+gyr_n: 1.4525632980313616e-03
+acc_w: 2.8319777865912281e-04
+gyr_w: 9.1375741919712940e-06
+
+g_norm: 9.79136
+
+#unsynchronization parameters
+estimate_td: 1
+td: 0.01031495550941674

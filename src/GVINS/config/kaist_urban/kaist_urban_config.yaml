@@ -1,0 +1,99 @@
+%YAML:1.0
+
+
+imu_topic: "/imu/data_raw"
+image_topic: "/stereo/left/image_raw"
+output_dir: "~/new_gvins_ws/output/"
+
+
+model_type: PINHOLE
+camera_name: camera
+image_width: 1280
+image_height: 560
+distortion_parameters:
+   k1: -0.056143027800000002
+   k2: 0.13952563200000001
+   p1: -0.0012155906999999999
+   p2: -0.00097281389999999998
+projection_parameters:
+   fx: 816.90378992770002
+   fy: 811.56803828490001
+   cx: 608.50726281690004
+   cy: 263.47599764440002
+
+
+gnss_enable: 0                       # Disabled: GVINS expects GnssMeasMsg (raw measurements), but dataset provides NavSatFix. 
+                                     # Use VIO-only mode or VINS-Fusion for GPS fusion (natively supports NavSatFix).
+gnss_meas_topic: "/gnss0"           # GNSS topic (not used when gnss_enable: 0)
+gnss_ephem_topic: "/ublox_driver/ephem"               # GPS, Galileo, BeiDou ephemeris (may not be available)
+gnss_glo_ephem_topic: "/ublox_driver/glo_ephem"       # GLONASS ephemeris (may not be available)
+gnss_iono_params_topic: "/ublox_driver/iono_params"   # GNSS broadcast ionospheric parameters (may not be available)
+gnss_tp_info_topic: "/ublox_driver/time_pulse_info"   # PPS time info (may not be available)
+gnss_elevation_thres: 30            # satellite elevation threshold (degree)  
+gnss_psr_std_thres: 2.0             # pseudo-range std threshold
+gnss_dopp_std_thres: 2.0            # doppler std threshold
+gnss_track_num_thres: 20            # number of satellite tracking epochs before entering estimator
+gnss_ddt_sigma: 0.1
+
+
+gnss_local_online_sync: 0                     # if perform online synchronization betwen GNSS and local time
+local_trigger_info_topic: "/external_trigger" # external trigger info of the local sensor, if `gnss_local_online_sync` is 1
+gnss_local_time_diff: 0.0                    # difference between GNSS and local time (s), if `gnss_local_online_sync` is 0
+
+# 缺省电离层参数
+gnss_iono_default_parameters: !!opencv-matrix 
+   rows: 1
+   cols: 8
+   dt: d
+   data: [0.1118E-07,  0.2235E-07, -0.4172E-06,  0.6557E-06,
+          0.1249E+06, -0.4424E+06,  0.1507E+07, -0.2621E+06]
+
+# Extrinsic parameter between IMU and Camera. 是否进行外参的在线标定
+estimate_extrinsic: 0   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
+                        # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
+                        # 2  Don't know anything about extrinsic parameters. You don't need to give R,T. We will try to calibrate it. Do some rotation movement at beginning.                        
+#If you choose 0 or 1, you should write down the following matrix.
+#Rotation from camera frame to imu frame, imu^R_cam
+#T_imu_cam from OpenVINS: [-0.00681,-0.01532,0.99987,1.71239; -0.99998,0.00033,-0.00680,0.24740; -0.00023,-0.99988,-0.01532,-0.11589]
+#imu^R_cam = R_CtoI (from T_imu_cam, taking first 3x3)
+extrinsicRotation: !!opencv-matrix
+   rows: 3
+   cols: 3
+   dt: d
+   data: [ -6.8100000000000002e-03, -1.5320000000000001e-02, 9.9986999999999995e-01, 
+          -9.9998000000000003e-01, 3.3000000000000003e-04, -6.7999999999999996e-03, 
+          -2.2999999999999999e-04, -9.9988000000000003e-01, -1.5319999999999999e-02 ]
+#Translation from camera frame to imu frame, imu^T_cam
+extrinsicTranslation: !!opencv-matrix
+   rows: 3
+   cols: 1
+   dt: d
+   data: [ 1.7123899999999999e+00, 2.4739999999999999e-01, -1.1588999999999999e-01 ]
+
+#feature traker paprameters
+max_cnt: 150            # max feature number in feature tracking 追踪最大提取的特征点数量
+min_dist: 30            # min distance between two features  两个特征点的距离
+freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 设置追踪输出的频率
+F_threshold: 1.0        # ransac threshold (pixel) ransac阈值
+show_track: 1           # publish tracking image as topic 展示追踪图像
+equalize: 1             # if image is too dark or light, trun on equalize to find enough features 如果图像太亮或者太暗均衡画寻找足够的特征点
+fisheye: 0              # if using fisheye, trun on it. A circle mask will be loaded to remove edge noisy points
+
+#optimization parameters
+max_solver_time: 0.04  # max solver itration time (ms), to guarantee real time
+max_num_iterations: 8   # max solver itrations, to guarantee real time
+keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
+
+#imu parameters       The more accurate parameters you provide, the better performance
+# Using VINS-Mono parameters for better handling of stationary periods (traffic stops)
+# Tighter parameters (0.08/0.004) cause backward drift when car stops - looser parameters (0.2/0.02) are more tolerant
+acc_n: 0.2          # accelerometer measurement noise standard deviation. (VINS-Mono: 0.2, VINS-Fusion: 0.08)
+gyr_n: 0.02         # gyroscope measurement noise standard deviation. (VINS-Mono: 0.02, VINS-Fusion: 0.004)
+acc_w: 0.0002       # accelerometer bias random work noise standard deviation. (VINS-Mono: 0.0002, VINS-Fusion: 0.00004)
+gyr_w: 2.0e-5       # gyroscope bias random work noise standard deviation. (VINS-Mono: 2.0e-5, VINS-Fusion: 2.0e-6)
+g_norm: 9.81     # gravity magnitude
+
+#unsynchronization parameters
+estimate_td: 0       # online estimate time offset between camera and imu 在线估计相机和imu之间的时间偏移
+td: 0.0              # initial value of time offset. unit: s. readed image clock + td = real image clock (IMU clock) 时间偏移的初始值。单位:s.读图像时钟+ td =实图像时钟(IMU时钟) (OpenVINS: time_offset: 0.0)
+

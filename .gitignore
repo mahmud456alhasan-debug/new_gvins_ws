@@ -9,6 +9,9 @@ logs/
 output/
 *.bag
 
+# Backup of nested git repos (created for GitHub upload)
+src_nested_repo_backup_*/
+
 # Python
 __pycache__/
 *.pyc

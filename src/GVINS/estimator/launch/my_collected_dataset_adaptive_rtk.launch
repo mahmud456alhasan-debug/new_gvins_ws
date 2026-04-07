@@ -1,0 +1,32 @@
+<launch>
+  <!-- Loose NavSatFix when RTK carrier-phase fix (carr_soln==2); tight raw GNSS in GVINS when carr_soln<2. -->
+  <!-- Single offset for global_fusion CSV + hybrid TUM (same role as GICI output_align_tag: one time base). -->
+  <arg name="gvins_path" default="$(find gvins)/../" />
+  <arg name="gdb" default="false" />
+  <arg name="navsat_topic" default="/ublox_driver/receiver_lla" />
+  <arg name="save_loose_csv" default="true" />
+  <arg name="loose_csv_path" default="$(env HOME)/new_gvins_ws/output/loose_global_fusion.csv" />
+  <arg name="hybrid_tum_path" default="$(env HOME)/new_gvins_ws/output/hybrid_trajectory_tum.txt" />
+  <arg name="gnss_local_time_diff" default="18.0" />
+
+  <include file="$(find gvins)/launch/my_collected_dataset.launch">
+    <arg name="config_path" value="$(find gvins)/../config/visensor_f9p/my_collected_dataset_adaptive_rtk_config.yaml" />
+    <arg name="gvins_path" value="$(arg gvins_path)" />
+    <arg name="gdb" value="$(arg gdb)" />
+  </include>
+
+  <include file="$(find gvins_global_fusion)/launch/gvins_global_fusion.launch">
+    <arg name="vio_odom_topic" value="/gvins/odometry" />
+    <arg name="gps_topic" value="$(arg navsat_topic)" />
+    <arg name="gnss_local_time_diff" value="$(arg gnss_local_time_diff)" />
+    <arg name="save_csv" value="$(arg save_loose_csv)" />
+    <arg name="csv_path" value="$(arg loose_csv_path)" />
+    <arg name="use_pvt_gate" value="true" />
+    <arg name="pvt_topic" value="/ublox_driver/receiver_pvt" />
+  </include>
+
+  <include file="$(find hybrid_trajectory_logger)/launch/hybrid_trajectory_logger.launch">
+    <arg name="output_path" value="$(arg hybrid_tum_path)" />
+    <arg name="gnss_local_time_diff" value="$(arg gnss_local_time_diff)" />
+  </include>
+</launch>

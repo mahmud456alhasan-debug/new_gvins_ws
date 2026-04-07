@@ -1,0 +1,28 @@
+<launch>
+  <!-- Same separation as VINS-Fusion my_collected_dataset.launch + global_fusion:
+       - GVINS runs VIO only: gnss_enable=0 (no raw GNSS in the sliding-window estimator).
+       - gvins_global_fusion fuses NavSatFix + /gvins/odometry (loose coupling, Ceres graph).
+       VINS-Fusion uses vins_node (no GNSS inside) + global_fusion_node; remap matches that stack. -->
+  <arg name="gvins_path" default="$(find gvins)/../" />
+  <arg name="gdb" default="false" />
+  <!-- Same default remap as vins_fusion_ws .../my_collected_dataset.launch (global_fusion /gps -> ...) -->
+  <arg name="navsat_topic" default="/ublox_driver/receiver_lla" />
+  <!-- Same default idea as VINS-Fusion global_fusion CSV logging: write loose fusion trajectory under workspace output -->
+  <arg name="save_loose_csv" default="true" />
+  <arg name="loose_csv_path" default="$(env HOME)/new_gvins_ws/output/loose_global_fusion.csv" />
+
+  <include file="$(find gvins)/launch/my_collected_dataset.launch">
+    <arg name="config_path" value="$(find gvins)/../config/visensor_f9p/my_collected_dataset_loose_gnss_config.yaml" />
+    <arg name="gvins_path" value="$(arg gvins_path)" />
+    <arg name="gdb" value="$(arg gdb)" />
+  </include>
+
+  <!-- Mirrors global_fusion: NavSatFix topic remap from vins_fusion_ws .../my_collected_dataset.launch -->
+  <include file="$(find gvins_global_fusion)/launch/gvins_global_fusion.launch">
+    <arg name="vio_odom_topic" value="/gvins/odometry" />
+    <arg name="gps_topic" value="$(arg navsat_topic)" />
+    <arg name="gnss_local_time_diff" value="18.0" />
+    <arg name="save_csv" value="$(arg save_loose_csv)" />
+    <arg name="csv_path" value="$(arg loose_csv_path)" />
+  </include>
+</launch>

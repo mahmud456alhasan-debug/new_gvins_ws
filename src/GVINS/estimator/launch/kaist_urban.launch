@@ -1,0 +1,20 @@
+<launch>
+    <arg name="config_path" default="$(find gvins)/../config/kaist_urban/kaist_urban_config.yaml" />
+    <arg name="gvins_path" default="$(find gvins)/../" />
+    
+    <!-- Feature Tracker Node -->
+    <node name="gvins_feature_tracker" pkg="gvins_feature_tracker" type="gvins_feature_tracker" output="log">
+        <param name="config_file" type="string" value="$(arg config_path)"/>
+        <param name="gvins_folder" type="string" value="$(arg gvins_path)"/>
+    </node>
+    
+    <!-- GVINS Estimator Node -->
+    <node name="gvins" pkg="gvins" type="gvins" output="screen">
+        <param name="config_file" type="string" value="$(arg config_path)"/>
+        <param name="gvins_folder" type="string" value="$(arg gvins_path)"/>
+    </node>
+    
+    <!-- RViz Visualization -->
+    <node name="rvizvisualisation" pkg="rviz" type="rviz" output="log" args="-d $(find gvins)/../config/gvins_rviz_config.rviz" />
+</launch>
+
