@@ -1,0 +1,27 @@
+<launch>
+  <!-- Loose coupling: GVINS odometry + NavSatFix (same pattern as VINS-Fusion global_fusion). -->
+  <arg name="vio_odom_topic" default="/gvins/odometry"/>
+  <arg name="gps_topic" default="/gps"/>
+  <arg name="gnss_local_time_diff" default="18.0"/>
+  <arg name="sync_tolerance" default="0.05"/>
+  <arg name="verbose" default="false"/>
+  <arg name="save_csv" default="false"/>
+  <arg name="csv_path" default=""/>
+  <arg name="mesh_package" default="gvins_global_fusion"/>
+  <!-- When use_pvt_gate is true, NavSatFix is fused only if latest PVT carr_soln==2 (RTK fix); matches gnss_adaptive_carr_soln in GVINS. -->
+  <arg name="use_pvt_gate" default="false"/>
+  <arg name="pvt_topic" default="/ublox_driver/receiver_pvt"/>
+
+  <node pkg="gvins_global_fusion" type="gvins_global_fusion_node" name="gvins_global_fusion" output="screen">
+    <param name="vio_odom_topic" value="$(arg vio_odom_topic)"/>
+    <param name="gps_topic" value="$(arg gps_topic)"/>
+    <param name="gnss_local_time_diff" value="$(arg gnss_local_time_diff)"/>
+    <param name="sync_tolerance" value="$(arg sync_tolerance)"/>
+    <param name="verbose" value="$(arg verbose)"/>
+    <param name="save_csv" value="$(arg save_csv)"/>
+    <param name="csv_path" value="$(arg csv_path)"/>
+    <param name="mesh_package" value="$(arg mesh_package)"/>
+    <param name="use_pvt_gate" value="$(arg use_pvt_gate)"/>
+    <param name="pvt_topic" value="$(arg pvt_topic)"/>
+  </node>
+</launch>

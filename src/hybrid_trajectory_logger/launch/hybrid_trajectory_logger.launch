@@ -1,0 +1,11 @@
+<launch>
+  <arg name="output_path" default="$(env HOME)/new_gvins_ws/output/hybrid_trajectory_tum.txt"/>
+  <arg name="global_odom_topic" default="/gvins_global_fusion/global_odometry"/>
+  <arg name="gnss_local_time_diff" default="18.0"/>
+
+  <node pkg="hybrid_trajectory_logger" type="hybrid_trajectory_logger_node" name="hybrid_trajectory_logger" output="screen">
+    <param name="output_path" value="$(arg output_path)"/>
+    <param name="global_odom_topic" value="$(arg global_odom_topic)"/>
+    <param name="gnss_local_time_diff" value="$(arg gnss_local_time_diff)"/>
+  </node>
+</launch>

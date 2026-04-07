@@ -1,0 +1,20 @@
+# Catkin
+build/
+devel/
+install/
+logs/
+.catkin_workspace
+
+# Runtime / local outputs
+output/
+*.bag
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
